@@ -1,7 +1,10 @@
+# API documentation: https://resolve.cafe/developers/scripting/
+
 # Define element IDs
 winID = "com.blackmagicdesign.resolve.MyComparisonWindow"
-stringSelectionID = "StringSelection"
-comparisonID = "ComparisonSelection"
+trackSelectionID = "TrackSelection"
+propertySelectionID = "StringSelection"
+operatorID = "ComparisonSelection"
 numberInputID = "NumberInput"
 colorID = "ColorSelection"
 submitID = "SubmitButton"
@@ -10,8 +13,14 @@ submitID = "SubmitButton"
 pm = resolve.GetProjectManager()
 p = pm.GetCurrentProject()
 tl = p.GetCurrentTimeline()
-tl_items = tl.GetItemListInTrack("video", 1)
-all_properties = list(tl_items[0].GetProperty().keys())
+tl_items_for_properties = tl.GetItemListInTrack("video", 1)
+all_properties = list(tl_items_for_properties[0].GetProperty().keys())
+
+# Count tracks
+video_track_count = tl.GetTrackCount("video")
+tracks = []
+for track in range(video_track_count):
+    tracks.append("Video " + str(track+1))
 
 ui = fusion.UIManager
 dispatcher = bmd.UIDispatcher(ui)
@@ -26,17 +35,21 @@ if win:
 # Define the window UI layout
 win = dispatcher.AddWindow({
     'ID': winID,
-    'Geometry': [100, 100, 170, 250],
+    'Geometry': [100, 100, 170, 300],
     'WindowTitle': "Flag clips"
 },
 ui.VGroup([
+    ui.Label({'Text': "Track:"}),
+    ui.ComboBox({
+        'ID': trackSelectionID,
+    }),
     ui.Label({'Text': "Property:"}),
     ui.ComboBox({
-        'ID': stringSelectionID,
+        'ID': propertySelectionID,
     }),
     ui.Label({'Text': "Operator:"}),
     ui.ComboBox({
-        'ID': comparisonID,
+        'ID': operatorID,
     }),
     ui.Label({'Text': "Integer:"}),
     ui.LineEdit({
@@ -63,11 +76,14 @@ ui.VGroup([
 )
 
 # Add items to the ComboBoxes
-stringDropDown = win.Find(stringSelectionID)
-stringDropDown.AddItems(all_properties)
+trackDropDown = win.Find(trackSelectionID)
+trackDropDown.AddItems(tracks)
 
-comparisonDropDown = win.Find(comparisonID)
-comparisonDropDown.AddItems(["equals", "does not equal", "is greater than", "is less than"])
+propertyDropDown = win.Find(propertySelectionID)
+propertyDropDown.AddItems(all_properties)
+
+operatorDropDown = win.Find(operatorID)
+operatorDropDown.AddItems(["equals", "does not equal", "is greater than", "is less than"])
 
 colorDropDown = win.Find(colorID)
 colorDropDown.AddItems(["Blue", "Cyan", "Green", "Yellow", "Red", "Pink", "Purple", "Fuchsia", "Rose", "Lavender", "Sky", "Mint", "Lemon", "Sand", "Cocoa", "Cream"])
@@ -78,8 +94,9 @@ def OnClose(ev):
     dispatcher.ExitLoop()
 
 def OnSubmit(ev):
-    selected_property = win.Find(stringSelectionID).CurrentText
-    selected_operator = win.Find(comparisonID).CurrentText
+    selected_track = win.Find(trackSelectionID).CurrentText
+    selected_property = win.Find(propertySelectionID).CurrentText
+    selected_operator = win.Find(operatorID).CurrentText
     selected_color = win.Find(colorID).CurrentText
     entered_number = win.Find(numberInputID).Text
 
@@ -88,12 +105,15 @@ def OnSubmit(ev):
     except ValueError:
         print("Please enter a valid number.")
         return
-    
+
     # Here, you can add code to process the gathered values.
+    print(f"Selected track: {selected_track}")
     print(f"Selected property: {selected_property}")
     print(f"Selected operator: {selected_operator}")
     print(f"Entered number: {entered_number}")
     print(f"Selected color: {selected_color}")
+
+    tl_items = tl.GetItemListInTrack("video", int(selected_track.split()[1]))
 
     if selected_operator == "equals":
         results = [item for item in tl_items if item.GetProperty()[selected_property] == entered_number]
