@@ -116,13 +116,13 @@ def OnSubmit(ev):
     tl_items = tl.GetItemListInTrack("video", int(selected_track.split()[1]))
 
     if selected_operator == "equals":
-        results = [item for item in tl_items if item.GetProperty()[selected_property] == entered_number]
+        results = [item for item in tl_items if item.GetProperty() and item.GetProperty()[selected_property] == entered_number]
     elif selected_operator == "does not equal":
-        results = [item for item in tl_items if item.GetProperty()[selected_property] != entered_number]
+        results = [item for item in tl_items if item.GetProperty() and item.GetProperty()[selected_property] != entered_number]
     elif selected_operator == "is greater than":
-        results = [item for item in tl_items if item.GetProperty()[selected_property] > entered_number]
+        results = [item for item in tl_items if item.GetProperty() and item.GetProperty()[selected_property] > entered_number]
     elif selected_operator == "is less than":
-        results = [item for item in tl_items if item.GetProperty()[selected_property] < entered_number]
+        results = [item for item in tl_items if item.GetProperty() and item.GetProperty()[selected_property] < entered_number]
 
     # Add flags
     for clip in results: clip.AddFlag(selected_color)
